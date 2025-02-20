@@ -1,6 +1,6 @@
 from django.urls import path
-from data_monitoring.views import *
+from data_monitoring.views import charts
 
 urlpatterns = [
-    path('', index),
+    path('', charts, name='charts'),
 ]
