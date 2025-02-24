@@ -1,0 +1,50 @@
+import time
+import requests
+import json
+import RPi.GPIO as GPIO
+
+# Configuração do sensor (Exemplo com HC-SR04)
+TRIG = 23
+ECHO = 24
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(TRIG, GPIO.OUT)
+GPIO.setup(ECHO, GPIO.IN)
+
+# URL do seu servidor Django (atualize com o link do ngrok)
+DJANGO_SERVER_URL = "<coloqueseuurl>/receive-data/"
+
+def get_distance():
+    GPIO.output(TRIG, True)
+    time.sleep(0.00001)
+    GPIO.output(TRIG, False)
+
+    while GPIO.input(ECHO) == 0:
+        pulse_start = time.time()
+
+    while GPIO.input(ECHO) == 1:
+        pulse_end = time.time()
+
+    pulse_duration = pulse_end - pulse_start
+    distance = (pulse_duration * 34300) / 2  # Fórmula do HC-SR04
+
+    return round(distance, 2)
+
+try:
+    while True:
+        distance = get_distance()
+        print(f"Distância medida: {distance} cm")
+
+        data = {"distance": distance}
+
+        try:
+            response = requests.post(DJANGO_SERVER_URL, json=data)
+            print("Resposta do servidor:", response.json())
+        except requests.exceptions.RequestException as e:
+            print("Erro ao enviar os dados:", e)
+
+        time.sleep(2)  # Enviar a cada 2 segundos
+
+except KeyboardInterrupt:
+    print("Encerrando...")
+    GPIO.cleanup()
